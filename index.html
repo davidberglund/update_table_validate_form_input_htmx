@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email and Name Form</title>
+    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+    <style>
+        .error-message {
+            color: red;
+        }
+        .error input {
+            box-shadow: 0 0 3px #CC0000;
+        }
+        .valid input {
+            box-shadow: 0 0 3px #36cc00;
+        }
+    </style>
+</head>
+<body>
+    <div id="table-and-form">
+        <h2>Contacts</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody id="contacts-table">
+                {{ contacts | safe }}
+            </tbody>
+        </table>
+
+<h3>Signup Form</h3>
+<form hx-post="/contacts" hx-target="#contacts-table" hx-swap="innerHTML">
+  <div>
+    <label>Email Address</label>
+    <input name="email" type="email" required 
+           hx-post="/contacts/email" 
+           hx-trigger="keyup changed delay:300ms" 
+           hx-target="this" 
+           hx-swap="outerHTML">
+    <div class="htmx-indicator"></div>
+  </div>
+  <div class="form-group">
+    <label>Name</label>
+    <input type="text" class="form-control" name="name" required>
+  </div>
+  <button type="submit" class="btn primary">Submit</button>
+</form>
+
+<div id="contacts-table">
+  <!-- Contact rows will be populated here -->
+</div>
+
+<style>
+.error-message {
+  color: red;
+}
+
+.error input {
+  border: 2px solid red;
+}
+
+.valid input {
+  border: 2px solid green;
+}
+</style>
+    </div>
+</body>
+</html>
