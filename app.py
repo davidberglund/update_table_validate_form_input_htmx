@@ -31,8 +31,9 @@ def add_contact(name, email):
             cursor.execute('INSERT INTO contacts (name, email) VALUES (?, ?)', (name, email))
             conn.commit()
             return True
-    except sqlite3.IntegrityError:  # This will catch unique constraint violations (duplicate emails)
+    except sqlite3.IntegrityError:
         return False
+
 @app.route('/')
 def index():
     init_db()  # Ensure the DB and table are created
@@ -58,35 +59,6 @@ def render_contacts():
     contacts = fetch_contacts()
     contact_rows = ''.join([f"<tr><td>{c[0]}</td><td>{c[1]}</td></tr>" for c in contacts])
     return contact_rows
-
-@app.route('/contacts/email', methods=['POST'])
-def validate_email():
-    email = request.form.get('email')
-    error_msg = ''
-
-    # Simple email validation
-    if not email or '@' not in email:
-        error_msg = "Please enter a valid email address."
-    
-    # Check for existing emails in the database
-    elif email_in_db(email):
-        error_msg = "That email is already taken. Please enter another email."
-
-    return f"""
-    <div hx-target="this" hx-swap="outerHTML" class="{('error' if error_msg else 'valid')}">
-        <label>Email Address</label>
-        <input name="email" required hx-post="/contacts/email" value="{email}">
-        <div class="htmx-indicator"></div>
-        {"<div class='error-message'>{error_msg}</div>" if error_msg else ""}
-    </div>
-    """
-
-# Function to check if email exists in the database
-def email_in_db(email):
-    with sqlite3.connect('contacts.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT 1 FROM contacts WHERE email = ?', (email,))
-        return cursor.fetchone() is not None
 
 # Start the server
 if __name__ == '__main__':
