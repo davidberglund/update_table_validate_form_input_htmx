@@ -44,6 +44,10 @@ def add_contact_route():
     name = request.form.get('name')  # Get name from form
     email = request.form.get('email')  # Get email from form
 
+    # Validate the email format here
+    if not email or '@' not in email:
+        return jsonify({"error": "Please enter a valid email address."}), 400
+
     if add_contact(name, email):
         return render_contacts()  # Return updated contacts
     else:
