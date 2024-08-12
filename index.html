@@ -15,6 +15,12 @@
         .valid input {
             box-shadow: 0 0 3px #36cc00;
         }
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline; /* Show the loading indicator during requests */
+        }
     </style>
 </head>
 <body>
@@ -32,43 +38,71 @@
             </tbody>
         </table>
 
-<h3>Signup Form</h3>
-<form hx-post="/contacts" hx-target="#contacts-table" hx-swap="innerHTML">
-  <div>
-    <label>Email Address</label>
-    <input name="email" type="email" required 
-           hx-post="/contacts/email" 
-           hx-trigger="keyup changed delay:300ms" 
-           hx-target="this" 
-           hx-swap="outerHTML">
-    <div class="htmx-indicator"></div>
-  </div>
-  
-  <div class="form-group">
-    <label>Name</label>
-    <input type="text" class="form-control" name="name" required>
-  </div>
-  
-  <button type="submit" class="btn primary">Submit</button>
-</form>
+        <h3>Signup Form</h3>
+        <form hx-post="/contacts" hx-target="#contacts-table" hx-swap="innerHTML" onsubmit="return validateForm()">
+          <div>
+            <label>Email Address</label>
+            <input name="email" type="email" required 
+                   hx-post="/contacts/email" 
+                   hx-trigger="keyup changed delay:300ms" 
+                   hx-target="this" 
+                   hx-swap="outerHTML">
+            <div class="htmx-indicator">Validating...</div>
+            <div id="email-error" class="error-message" style="display:none;"></div>
+          </div>
+          
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
 
-<div id="contacts-table">
-  <!-- Contact rows will be populated here -->
-</div>
-
-<style>
-.error-message {
-  color: red;
-}
-
-.error input {
-  border: 2px solid red;
-}
-
-.valid input {
-  border: 2px solid green;
-}
-</style>
+          <button class="btn primary" type="submit">Submit</button>
+        </form>
     </div>
+
+    <script>
+        function validateForm() {
+            const emailInput = document.querySelector('input[name="email"]');
+            const emailError = document.getElementById('email-error');
+            emailError.style.display = 'none';
+
+            // Simple email validation
+            if (!emailInput.value || emailInput.value.indexOf('@') === -1) {
+                emailError.innerHTML = "Please enter a valid email address.";
+                emailError.style.display = 'block';
+                return false; // Prevent form submission
+            }
+            return true; // Allow form submission
+        }
+
+        document.querySelector('input[name="email"]').addEventListener('blur', function() {
+            const emailValue = this.value;
+            const emailError = document.getElementById('email-error');
+            emailError.style.display = 'none';
+
+            if (!emailValue || emailValue.indexOf('@') === -1) {
+                emailError.innerHTML = "Please enter a valid email address.";
+                emailError.style.display = 'block';
+                return;
+            }
+
+            fetch('/contacts/email', {
+                method: 'POST',
+                body: new URLSearchParams(new FormData(document.querySelector('form'))),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    emailError.innerHTML = data.error;
+                    emailError.style.display = 'block';
+                } else {
+                    emailError.style.display = 'none'; // Hide error if valid
+                }
+            });
+        });
+    </script>
 </body>
 </html>
